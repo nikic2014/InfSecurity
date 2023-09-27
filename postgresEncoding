@@ -1,0 +1,78 @@
+--https://www.vultr.com/docs/how-to-encrypt-data-columns-in-postgresql/
+
+CREATE EXTENSION pgcrypto ;
+
+CREATE TABLE patients (id SERIAL, name VARCHAR(50), notes_symmetric TEXT UNIQUE, notes_asymmetric TEXT UNIQUE) ;
+
+INSERT INTO patients (name, notes_symmetric) 
+
+VALUES (
+
+    'Jane Doe 1',
+
+    pgp_sym_encrypt(
+
+        'A 66-year-old female presents symptoms of pain in their lower left molars for the last 2 weeks. No prior history of dental problems. Occasional smoker.', 
+
+        'this_is_a_dummy_secret_key'
+
+    )
+
+) ;
+
+INSERT INTO patients (name, notes_symmetric) 
+
+VALUES (
+
+    'John Doe 1',
+
+    pgp_sym_encrypt(
+
+        'A 66-year-old male presents symptoms of pain in their lower left abdomen for the last 2 weeks. No prior history of kidney problems. Occasional drinker.', 
+
+        'this_is_a_dummy_secret_key'
+
+    )
+
+) ;
+
+SELECT * FROM patients ;
+
+SELECT 
+
+    name, 
+
+    pgp_sym_decrypt(
+
+        notes_symmetric::BYTEA, 
+
+        'this_is_a_dummy_secret_key'
+
+    ) 
+
+FROM patients ;
+
+
+SELECT 
+
+    name, 
+
+    pgp_sym_decrypt(
+
+        notes_symmetric::BYTEA, 
+
+        'this_is_a_dummy_secret_key'
+
+    ) 
+
+FROM patients
+
+WHERE 
+
+    pgp_sym_decrypt(
+
+        notes_symmetric::BYTEA, 
+
+        'this_is_a_dummy_secret_key'
+
+    ) ILIKE '%smoke%' ;
